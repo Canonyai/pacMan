@@ -10,10 +10,13 @@ class Ghost:
         self.size = size
         self.direction = pygame.Vector2(0, 0)
         self.speed = 0.8
+        self.vulnerable_timer = 0
+        self.vulnerable = False
 
         # Load Pac-Man Ghost character
-        self.ghostChar = pygame.image.load("redGhost.png")  # Replace with actual path to Ghost pictures
-        self.ghostChar = pygame.transform.scale(self.ghostChar, (size, size))
+        self.normalGhostChar = pygame.image.load("redGhost.png")  # Replace with actual path to Ghost pictures
+        self.scaredGhostChar = pygame.image.load("whiteGhost.png")
+        self.ghostChar = pygame.transform.scale(self.normalGhostChar, (size, size))
 
     def random_direction(self, board):
         possible_directions = [pygame.Vector2(0, -1), pygame.Vector2(0, 1), pygame.Vector2(-1, 0), pygame.Vector2(1, 0)]
@@ -25,6 +28,18 @@ class Ghost:
             if board.layout[row][col] != '#':  # collision with a wall
                 self.direction = direction  # assign new direction
                 break
+
+    def make_vulnerable(self, duration):
+        self.vulnerable = True
+        self.vulnerable_timer = duration
+        self.ghostChar = pygame.transform.scale(self.scaredGhostChar, (self.size, self.size))
+
+    def update(self):
+        if self.vulnerable:
+            self.vulnerable_timer -= 1
+            if self.vulnerable_timer <= 0:
+                self.vulnerable = False
+                self.ghostChar = pygame.transform.scale(self.normalGhostChar, (self.size, self.size))
 
     def move(self, board):
         if self.direction.length_squared() == 0 or random.random() < 0.1:  # Change direction randomly

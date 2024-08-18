@@ -1,6 +1,7 @@
 import pygame
 
 import board
+from powerPellets import PowerPellet
 
 
 class PacMan:
@@ -9,6 +10,7 @@ class PacMan:
         self.position = start_position
         self.direction = pygame.Vector2(0, 0)  # Initially stationary
         self.speed = 1
+        self.powerup = False
 
         # Load Pac-Man character
         self.pacManChar = pygame.image.load("pacman.gif")  # Replace with actual path to Pac-Man sprite
@@ -25,24 +27,6 @@ class PacMan:
         elif keys[pygame.K_RIGHT]:
             self.direction = pygame.Vector2(1, 0)
 
-    # def move(self, board):
-    #     # Calculate new position
-    #     updated_position = self.position + self.direction * self.speed
-    #     # updated_position = self.position + self.direction
-    #
-    #     # Check for left warp
-    #     if self.position.x < 0:
-    #         self.position.x = board.width - 1
-    #
-    #     # Check for right warp
-    #     if self.position.x >= board.width:
-    #         self.position.x = 0
-    #
-    #     # Check for wall collision
-    #     row, col = int(updated_position.y), int(updated_position.x)
-    #     if 0 <= row < board.height and 0 <= col < board.width:
-    #         if board.layout[row][col] != '#':  # Can move if not hitting a wall
-    #             self.position = updated_position
     def move(self, board):
         # Calculate new position
         new_pos = self.position + self.direction * self.speed
@@ -64,6 +48,19 @@ class PacMan:
                     if new_rect.colliderect(wall_rect):
                         return  # Prevent movement
 
+        # Check for collision with pellets to allow Pac-Man to eat them
+        for pellet in board.pellets:
+            pellet_rect = pygame.Rect(pellet.position.x * self.size, pellet.position.y * self.size, self.size,
+                                      self.size)
+            if new_rect.colliderect(pellet_rect) and not pellet.eaten:
+                pellet.eaten = True
+                board.pellets.remove(pellet)
+                board.game.score += 10  # Increase the score or apply other logic
+
+                if isinstance(pellet, PowerPellet):
+                    pellet.activate_power(board.game)  # Activate power pellet effect
+                    board.game.score += 10  # Regular pellet, increase score# No collision, update position
+
         # No collision, update position
         self.position = new_pos
 
@@ -71,6 +68,3 @@ class PacMan:
         x = int(self.position.x * self.size)
         y = int(self.position.y * self.size)
         screen.blit(self.pacManChar, (x, y))
-
-
-

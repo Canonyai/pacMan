@@ -11,9 +11,10 @@ class Game:
         self.clock = pygame.time.Clock()
         self.screen = screen
         screen_width, screen_height = screen.get_size()
-        self.board = Board(default_layout, screen_width, screen_height)  # Pass screen dimensions to Board
+        self.board = Board(default_layout, screen_width, screen_height, self)  # Pass screen dimensions to Board
         self.pacman = PacMan(pygame.Vector2(1, 1), self.board.tile_size)  # start pos for PacMan
-        self.ghosts = [Ghost(pygame.Vector2(9, 9), self.board.tile_size)]  # Example start positions
+        # self.ghosts = [Ghost(pygame.Vector2(16, 13), self.board.tile_size)]  # Example start positions
+        self.ghosts = [Ghost(pygame.Vector2(10, 11), self.board.tile_size)]  # Example start positions
 
         # for score keeping
         self.score = 0
@@ -29,29 +30,44 @@ class Game:
                 sys.exit()
 
         self.pacman.handle_input()
-        print(f"Pac-Man Position: {self.pacman.position}")
-
         self.pacman.move(self.board)
         print(f"Pac-Man Position: {self.pacman.position}")
 
         for ghost in self.ghosts:
+            ghost.update()
             ghost.move(self.board)
 
         self.check_collisions()
+
+        print(f"The score is {self.score}")
 
     def check_collisions(self):
         pos = self.pacman.position
         for ghost in self.ghosts:
             if pos == ghost.position:
-                print("Collision Detected")
-                self.lives -= 1
-                self.reset_positions()
+                if ghost.vulnerable:
+                    self.eat_ghost(ghost)
+                else:
+                    self.lives -= 1
+                    self.reset_positions()
+            print("Collision Detected")
 
     def reset_positions(self):
         self.pacman.position = pygame.Vector2(1, 1)
         for ghost in self.ghosts:
             ghost.position = pygame.Vector2(10, 10)  # Reset ghost positions
 
+    def eat_ghost(self, ghost):
+        if ghost.vulnerable:
+            self.ghosts.remove(ghost)
+            self.score += 100  # Increase score for eating ghosts
+
+    def make_ghosts_vulnerable(self):
+        for ghost in self.ghosts:
+            ghost.make_vulnerable(200)
+
+        return True
+# 11-16
     def draw(self):
         # Placeholder for game drawing logic
         self.screen.fill((0, 0, 0))
